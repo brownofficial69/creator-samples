@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Qur'an reading tracker · Craftbench</title>
+<style>
+  /* Creator Pipeline design tokens, same names as Craftbench. Light by default, dark when the viewer's system is dark. */
+  :root {
+    color-scheme: light dark;
+    --bg: #f5f2e9;
+    --surface: #ffffff;
+    --surface-2: #efebe0;
+    --line-strong: #7d7663;
+    --text: #1c1a12;
+    --text-muted: #5a5342;
+    --focus: #8a5a00;
+    --bad: #a8402a;
+    --s1: 4px; --s2: 8px; --s3: 12px; --s4: 16px; --s5: 24px; --s6: 40px;
+    --r-outer: 16px;
+    --pad: 8px;
+    --r-inner: calc(var(--r-outer) - var(--pad));
+    --font: "Segoe UI", system-ui, sans-serif;
+    --t-fast: 120ms;
+    --ease: cubic-bezier(.2, .7, .2, 1);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #12140f;
+      --surface: #1b1f18;
+      --surface-2: #20251c;
+      --line-strong: #78836a;
+      --text: #f3efe2;
+      --text-muted: #b9b19d;
+      --focus: #e4a23a;
+      --bad: #e8826a;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    padding: var(--s5) var(--s4) var(--s6);
+    background: var(--bg);
+    color: var(--text);
+    font: 15px/1.5 var(--font);
+    font-variant-numeric: tabular-nums;
+  }
+  main { max-width: 880px; margin: 0 auto; display: grid; gap: var(--s4); }
+  h1 { margin: 0; font-size: 32px; line-height: 1.15; letter-spacing: -0.02em; font-weight: 650; text-wrap: balance; }
+  .desc { margin: 0; color: var(--text-muted); text-wrap: pretty; max-width: 60ch; }
+  /* Card: outer radius 16, 8px bezel; panels inside use 16 - 8 = 8. */
+  .tool { background: var(--surface); border-radius: var(--r-outer); padding: var(--pad); display: grid; gap: var(--pad); }
+  .panel { background: var(--surface-2); border-radius: var(--r-inner); padding: var(--s4); }
+  #form { display: grid; gap: var(--s4); }
+  .head { display: flex; justify-content: space-between; align-items: baseline; gap: var(--s3); margin-bottom: var(--s2); }
+  label { font-weight: 600; line-height: 1.4; }
+  .val { font-weight: 600; }
+  .help { margin-top: var(--s1); font-size: 13px; color: var(--text-muted); text-wrap: pretty; }
+  input, select, textarea {
+    width: 100%;
+    min-height: 40px;
+    padding: var(--s2) var(--s3);
+    border: 1px solid var(--line-strong);
+    border-radius: var(--r-inner);
+    background: var(--bg);
+    color: inherit;
+    font: inherit;
+    font-variant-numeric: tabular-nums;
+    transition: border-color var(--t-fast) var(--ease);
+  }
+  input[type="range"] { padding: 0; min-height: 24px; accent-color: var(--focus); }
+  input[type="checkbox"] { width: 20px; min-height: 20px; height: 20px; accent-color: var(--focus); }
+  :focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+  .outputs { display: grid; gap: var(--s2); align-content: start; }
+  .out { background: var(--surface); border-radius: var(--r-inner); padding: var(--s3) var(--s4); }
+  .out .label { font-size: 13px; color: var(--text-muted); }
+  .out .value { margin-top: var(--s1); font-size: 28px; line-height: 1.15; font-weight: 700; letter-spacing: -0.01em; overflow-wrap: anywhere; }
+  .out .err { margin-top: var(--s1); color: var(--bad); font-size: 13px; }
+  footer { font-size: 13px; color: var(--text-muted); }
+  @media (min-width: 700px) {
+    .tool { grid-template-columns: minmax(0, 1fr) minmax(0, 0.9fr); align-items: start; }
+    .outputs { position: sticky; top: var(--s4); }
+  }
+  @media (max-width: 699px) {
+    h1 { font-size: 26px; }
+    input, select, textarea { font-size: 16px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation: none !important; transition: none !important; }
+  }
+</style>
+</head>
+<body>
+<main>
+  <h1 id="title"></h1>
+  <p class="desc" id="desc"></p>
+  <div class="tool">
+    <form id="form" class="panel" onsubmit="return false"></form>
+    <div class="panel outputs" id="outputs" role="group" aria-label="Results" aria-live="polite"></div>
+  </div>
+  <footer>Made with Craftbench. Works offline.</footer>
+</main>
+<script>
+const TOOL = {"id":"tool-qur-an-reading-tracker-mwca1i50","name":"Qur'an reading tracker","description":"Tracks pages or minutes read against a goal the viewer sets, with space for the creator's own encouragement.","category":"Trackers","tags":["Qur'an reading","reading tracker","Muslim lifestyle","islamlewis","free sample"],"fields":[{"id":"tracking_unit","label":"Track by","type":"select","defaultValue":"pages","options":[{"label":"Pages","value":"pages"},{"label":"Minutes","value":"minutes"}],"help":"Choose one unit for this sitting. If you change it, update your goal and amount read to match."},{"id":"reading_goal","label":"Your goal for this sitting","type":"number","defaultValue":10,"min":1,"step":1,"help":"Enter your own goal in your selected unit. The sample value is editable, not a recommendation."},{"id":"amount_read","label":"Read so far","type":"number","defaultValue":0,"min":0,"step":1,"help":"Enter the pages or minutes you have completed during this sitting. Update this number as you go."},{"id":"creator_encouragement","label":"Creator's own encouragement","type":"textarea","defaultValue":"","placeholder":"[Creator: add your own encouragement here before sharing.]","help":"Reserved for the creator's own words. No religious wording is supplied in this sample."}],"outputs":[{"id":"selected_unit","label":"Your tracking unit","formula":"tracking_unit","format":"text"},{"id":"goal_progress","label":"Goal completed","formula":"clamp(amount_read / max(1, reading_goal), 0, 1)","format":"percent","description":"Progress towards your goal for this sitting, capped at 100%."},{"id":"remaining","label":"Remaining to reach your goal","formula":"max(0, reading_goal - max(0, amount_read))","format":"number","description":"Pages or minutes remaining, using your selected unit."},{"id":"encouragement","label":"A note from the creator","formula":"creator_encouragement","format":"text","description":"Displays only the creator's supplied words. Blank until the creator adds their message."}],"createdAt":"2026-11-11T15:31:45.300Z","updatedAt":"2026-11-11T15:31:45.300Z"};
+
+const HELPERS = {
+  round: (n, d = 0) => { const f = 10 ** (d || 0); return Math.round(n * f) / f; },
+  floor: (n) => Math.floor(n),
+  ceil: (n) => Math.ceil(n),
+  min: (...a) => Math.min(...a),
+  max: (...a) => Math.max(...a),
+  abs: (n) => Math.abs(n),
+  pow: (a, b) => Math.pow(a, b),
+  sqrt: (n) => Math.sqrt(n),
+  clamp: (n, lo, hi) => Math.min(Math.max(n, lo), hi),
+  if: (c, a, b) => (c ? a : b),
+};
+
+function tokenize(expr) {
+  const tokens = [];
+  let i = 0;
+  while (i < expr.length) {
+    const ch = expr[i];
+    if (/\s/.test(ch)) { i++; continue; }
+    if ((ch === "<" || ch === ">" || ch === "=" || ch === "!") && i + 1 < expr.length && expr[i + 1] === "=") {
+      tokens.push(expr.slice(i, i + 2)); i += 2; continue;
+    }
+    if (ch === "<" || ch === ">") { tokens.push(ch); i++; continue; }
+    if ("+-*/%(),".includes(ch)) { tokens.push(ch); i++; continue; }
+    if (/[0-9.]/.test(ch)) {
+      let j = i + 1; while (j < expr.length && /[0-9.]/.test(expr[j])) j++;
+      tokens.push(expr.slice(i, j)); i = j; continue;
+    }
+    if (/[A-Za-z_]/.test(ch)) {
+      let j = i + 1; while (j < expr.length && /[A-Za-z0-9_]/.test(expr[j])) j++;
+      tokens.push(expr.slice(i, j)); i = j; continue;
+    }
+    throw new Error("Unexpected: " + ch);
+  }
+  return tokens;
+}
+
+function parse(tokens) {
+  let i = 0;
+  const peek = () => tokens[i];
+  const take = () => tokens[i++];
+  const expect = (t) => { if (take() !== t) throw new Error("Expected " + t); };
+  function expr() { return comparison(); }
+  function comparison() {
+    let left = additive();
+    while (peek() === "<" || peek() === ">" || peek() === "<=" || peek() === ">=" || peek() === "==" || peek() === "!=") {
+      const op = take(); left = { k: "op", op, left, right: additive() };
+    }
+    return left;
+  }
+  function additive() {
+    let left = term();
+    while (peek() === "+" || peek() === "-") {
+      const op = take(); left = { k: "op", op, left, right: term() };
+    }
+    return left;
+  }
+  function term() {
+    let left = unary();
+    while (peek() === "*" || peek() === "/" || peek() === "%") {
+      const op = take(); left = { k: "op", op, left, right: unary() };
+    }
+    return left;
+  }
+  function unary() {
+    if (peek() === "-") { take(); return { k: "unary", arg: unary() }; }
+    return primary();
+  }
+  function primary() {
+    const t = peek();
+    if (t === undefined) throw new Error("EOF");
+    if (/^[0-9.]/.test(t)) { take(); return { k: "num", v: Number(t) }; }
+    if (t === "(") { take(); const n = expr(); expect(")"); return n; }
+    if (/^[A-Za-z_]/.test(t)) {
+      take();
+      if (peek() === "(") {
+        take();
+        const args = [];
+        if (peek() !== ")") {
+          args.push(expr());
+          while (peek() === ",") { take(); args.push(expr()); }
+        }
+        expect(")");
+        return { k: "call", name: t, args };
+      }
+      return { k: "id", name: t };
+    }
+    throw new Error("Unexpected " + t);
+  }
+  const node = expr();
+  if (i < tokens.length) throw new Error("Trailing tokens");
+  return node;
+}
+
+function evalNode(node, vars) {
+  switch (node.k) {
+    case "num": return node.v;
+    case "id": return vars[node.name] ?? 0;
+    case "unary": return -evalNode(node.arg, vars);
+    case "op": {
+      const a = evalNode(node.left, vars), b = evalNode(node.right, vars);
+      if (node.op === "+") return a + b;
+      if (node.op === "-") return a - b;
+      if (node.op === "*") return a * b;
+      if (node.op === "/") return b === 0 ? NaN : a / b;
+      if (node.op === "%") return a % b;
+      if (node.op === "<") return a < b ? 1 : 0;
+      if (node.op === ">") return a > b ? 1 : 0;
+      if (node.op === "<=") return a <= b ? 1 : 0;
+      if (node.op === ">=") return a >= b ? 1 : 0;
+      if (node.op === "==") return a === b ? 1 : 0;
+      if (node.op === "!=") return a !== b ? 1 : 0;
+      throw new Error(node.op);
+    }
+    case "call": {
+      const fn = HELPERS[node.name];
+      if (!fn) throw new Error("Unknown " + node.name);
+      return fn(...node.args.map((a) => evalNode(a, vars)));
+    }
+  }
+}
+
+function evaluate(formula, values) {
+  try {
+    const vars = {};
+    for (const [k, v] of Object.entries(values)) {
+      vars[k] = typeof v === "boolean" ? (v ? 1 : 0) : Number(v) || 0;
+    }
+    const value = evalNode(parse(tokenize(formula.trim())), vars);
+    if (!Number.isFinite(value)) return { ok: false, error: "Not finite" };
+    return { ok: true, value };
+  } catch (e) {
+    return { ok: false, error: e.message || "Error" };
+  }
+}
+
+function format(value, format, prefix = "", suffix = "") {
+  if (format === "currency") {
+    return prefix + value.toLocaleString("en-GB", { style: "currency", currency: "GBP", maximumFractionDigits: 2 }) + suffix;
+  }
+  if (format === "percent") {
+    return prefix + (value * 100).toLocaleString(undefined, { maximumFractionDigits: 2 }) + "%" + suffix;
+  }
+  return prefix + value.toLocaleString(undefined, { maximumFractionDigits: 4 }) + suffix;
+}
+
+const form = document.getElementById("form");
+const outputsEl = document.getElementById("outputs");
+document.getElementById("title").textContent = TOOL.name;
+document.getElementById("desc").textContent = TOOL.description;
+
+function renderFields() {
+  form.innerHTML = "";
+  for (const f of TOOL.fields) {
+    const wrap = document.createElement("div");
+    wrap.className = "field";
+    const head = document.createElement("div");
+    head.className = "head";
+    const lab = document.createElement("label");
+    lab.textContent = f.label + (f.unit ? " (" + f.unit + ")" : "");
+    lab.htmlFor = f.id;
+    head.appendChild(lab);
+    wrap.appendChild(head);
+    let input;
+    if (f.type === "select") {
+      input = document.createElement("select");
+      for (const opt of (f.options || [])) {
+        const o = document.createElement("option");
+        o.value = opt.value; o.textContent = opt.label;
+        if (String(f.defaultValue) === String(opt.value)) o.selected = true;
+        input.appendChild(o);
+      }
+    } else if (f.type === "textarea") {
+      input = document.createElement("textarea");
+      input.rows = 3;
+      input.value = f.defaultValue ?? "";
+    } else if (f.type === "toggle") {
+      input = document.createElement("input");
+      input.type = "checkbox";
+      input.checked = Boolean(f.defaultValue);
+      input.style.width = "auto";
+    } else if (f.type === "slider") {
+      input = document.createElement("input");
+      input.type = "range";
+      input.min = f.min ?? 0; input.max = f.max ?? 100; input.step = f.step ?? 1;
+      input.value = f.defaultValue ?? 0;
+    } else if (f.type === "text") {
+      input = document.createElement("input");
+      input.type = "text";
+      input.value = f.defaultValue ?? "";
+      input.placeholder = f.placeholder || "";
+    } else {
+      input = document.createElement("input");
+      input.type = "number";
+      if (f.min != null) input.min = f.min;
+      if (f.max != null) input.max = f.max;
+      if (f.step != null) input.step = f.step;
+      input.value = f.defaultValue ?? 0;
+    }
+    input.id = f.id;
+    if (f.type === "slider") {
+      const val = document.createElement("span");
+      val.className = "val";
+      val.setAttribute("aria-hidden", "true");
+      val.textContent = input.value;
+      head.appendChild(val);
+      input.addEventListener("input", () => { val.textContent = input.value; });
+    }
+    input.addEventListener("input", compute);
+    input.addEventListener("change", compute);
+    wrap.appendChild(input);
+    if (f.help) {
+      const h = document.createElement("div");
+      h.className = "help";
+      h.textContent = f.help;
+      wrap.appendChild(h);
+    }
+    form.appendChild(wrap);
+  }
+}
+
+function readValues() {
+  const values = {};
+  for (const f of TOOL.fields) {
+    const el = document.getElementById(f.id);
+    if (!el) continue;
+    if (f.type === "toggle") values[f.id] = el.checked;
+    else if (f.type === "text" || f.type === "textarea" || f.type === "select") values[f.id] = el.value;
+    else values[f.id] = Number(el.value);
+  }
+  return values;
+}
+
+function compute() {
+  const values = readValues();
+  outputsEl.innerHTML = "";
+  for (const o of TOOL.outputs) {
+    const box = document.createElement("div");
+    box.className = "out";
+    const lab = document.createElement("div");
+    lab.className = "label";
+    lab.textContent = o.label;
+    box.appendChild(lab);
+    const result = evaluate(o.formula, values);
+    if (result.ok) {
+      const v = document.createElement("div");
+      v.className = "value";
+      v.textContent = format(result.value, o.format || "number", o.prefix || "", o.suffix || "");
+      box.appendChild(v);
+    } else {
+      const e = document.createElement("div");
+      e.className = "err";
+      e.textContent = result.error;
+      box.appendChild(e);
+    }
+    if (o.description) {
+      const d = document.createElement("div");
+      d.className = "help";
+      d.textContent = o.description;
+      box.appendChild(d);
+    }
+    outputsEl.appendChild(box);
+  }
+}
+
+renderFields();
+compute();
+</script>
+</body>
+</html>
