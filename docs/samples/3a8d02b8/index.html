@@ -74,7 +74,7 @@
   .outputs { display: grid; gap: var(--s2); align-content: start; }
   .out { background: var(--surface); border-radius: var(--r-inner); padding: var(--s3) var(--s4); }
   .out .label { font-size: 13px; color: var(--text-muted); }
-  .out .value { margin-top: var(--s1); font-size: 28px; line-height: 1.15; font-weight: 700; letter-spacing: -0.01em; overflow-wrap: anywhere; }
+  .out .value { white-space: pre-line; margin-top: var(--s1); font-size: 28px; line-height: 1.15; font-weight: 700; letter-spacing: -0.01em; overflow-wrap: anywhere; }
   .out .err { margin-top: var(--s1); color: var(--bad); font-size: 13px; }
   footer { font-size: 13px; color: var(--text-muted); }
   @media (min-width: 700px) {
@@ -103,143 +103,173 @@
 <script>
 const TOOL = {"id":"tool-desk-setup-budget-planner-mwc6rio8","name":"Desk setup budget planner","description":"A viewer picks a budget and what matters most and gets a staged upgrade list instead of one big basket.","category":"Productivity","tags":["desk setups","budget planner","productivity","tech","staged upgrades","mehdi.setups"],"fields":[{"id":"total_budget","label":"Total upgrade budget","type":"number","defaultValue":200,"min":0,"max":10000,"step":1,"unit":"£","help":"Enter the total you can comfortably spend across all three stages, not a monthly payment."},{"id":"priority","label":"What matters most?","type":"select","defaultValue":"productivity","options":[{"label":"Productivity — a smoother working day","value":"productivity"},{"label":"Comfort — better positioning and support","value":"comfort"},{"label":"Lighting — a brighter, clearer workspace","value":"lighting"},{"label":"Tech — fewer connection and charging hassles","value":"tech"}],"help":"Pick your biggest daily frustration. The staged list changes to match."},{"id":"reserve_percent","label":"Keep some budget aside","type":"slider","defaultValue":10,"min":0,"max":30,"step":5,"unit":"%","help":"Leave this share unallocated for delivery, unexpected costs or savings. The remaining budget is split 50% / 30% / 20% across the stages."}],"outputs":[{"id":"stage_one_cap","label":"Stage 1 — fix the main friction","formula":"round(max(0, total_budget) * (1 - clamp(reserve_percent, 0, 30) / 100) * 0.5, 2)","format":"currency","prefix":"","description":"Your first spending cap, not a target. Follow Stage 1 in the upgrade list below. Try repositioning or reusing what you own before buying."},{"id":"stage_two_cap","label":"Stage 2 — support the improvement","formula":"round(max(0, total_budget) * (1 - clamp(reserve_percent, 0, 30) / 100) * 0.3, 2)","format":"currency","prefix":"","description":"Only move on after testing Stage 1 during a normal working day. Skip anything your existing setup already does well."},{"id":"stage_three_cap","label":"Stage 3 — finish only if needed","formula":"round(max(0, total_budget) * (1 - clamp(reserve_percent, 0, 30) / 100), 2) - round(max(0, total_budget) * (1 - clamp(reserve_percent, 0, 30) / 100) * 0.5, 2) - round(max(0, total_budget) * (1 - clamp(reserve_percent, 0, 30) / 100) * 0.3, 2)","format":"currency","prefix":"","description":"Optional finishing budget. Save it if the problem is solved. These are spending limits, not product price estimates; if a suitable upgrade costs more, save towards it rather than buying a poor substitute."},{"id":"staged_upgrade_list","label":"Your staged upgrade list","formula":"if(total_budget \u003c= 0, 'Stage 1: Clear your working area and reposition your existing screen. Stage 2: Adjust your chair and move your keyboard and mouse within easy reach. Stage 3: Route existing cables and test the setup for a working day. No purchases needed.', if(priority == 'comfort', 'Stage 1: Adjust your existing chair and desk first; then consider the missing support, such as a footrest or a suitable chair to save towards. Stage 2: Improve screen height with a stable riser or compatible stand. Stage 3: Address keyboard or mouse positioning only if it remains uncomfortable. Stop if an upgrade does not help.', if(priority == 'lighting', 'Stage 1: Move your desk or existing lamp to reduce glare; then consider an adjustable task lamp. Stage 2: Add gentle background lighting only if contrast remains tiring. Stage 3: Tidy lighting cables and choose a suitable replacement bulb only if needed. Check fittings and avoid reflections on your screen.', if(priority == 'tech', 'Stage 1: Identify your daily connection bottleneck; consider one compatible hub, adaptor or charging solution. Stage 2: Replace only a genuinely limiting cable or peripheral. Stage 3: Organise charging and cables with reusable ties or a simple holder. Check ports, power requirements and compatibility before buying.', 'Stage 1: Improve screen positioning using what you own; consider a stable laptop riser or compatible monitor stand if needed. Stage 2: Improve input comfort with a separate keyboard or mouse only where it solves a daily problem. Stage 3: Clear desk space with cable ties or a small organiser. Avoid buying extra screens or accessories without a clear use.'))))","format":"text","description":"Use each stage’s spending cap above. Pick one useful change per stage; you do not need to buy every suggestion. Carry underspend forward or keep it."}],"createdAt":"2026-11-11T14:00:00.584Z","updatedAt":"2026-11-11T14:00:00.584Z"};
 
-const HELPERS = {
-  round: (n, d = 0) => { const f = 10 ** (d || 0); return Math.round(n * f) / f; },
-  floor: (n) => Math.floor(n),
-  ceil: (n) => Math.ceil(n),
-  min: (...a) => Math.min(...a),
-  max: (...a) => Math.max(...a),
-  abs: (n) => Math.abs(n),
-  pow: (a, b) => Math.pow(a, b),
-  sqrt: (n) => Math.sqrt(n),
-  clamp: (n, lo, hi) => Math.min(Math.max(n, lo), hi),
-  if: (c, a, b) => (c ? a : b),
-};
+// Craftbench formula runtime v2
+const evaluate = (function createEvaluator() {
+  const HELPERS = {
+    round: (n, d = 0) => { const f = 10 ** (d || 0); return Math.round(n * f) / f; },
+    floor: (n) => Math.floor(n),
+    ceil: (n) => Math.ceil(n),
+    min: (...a) => Math.min(...a),
+    max: (...a) => Math.max(...a),
+    abs: (n) => Math.abs(n),
+    pow: (a, b) => Math.pow(a, b),
+    sqrt: (n) => Math.sqrt(n),
+    clamp: (n, lo, hi) => Math.min(Math.max(n, lo), hi),
+    if: (c, a, b) => (c ? a : b),
+  };
 
-function tokenize(expr) {
-  const tokens = [];
-  let i = 0;
-  while (i < expr.length) {
-    const ch = expr[i];
-    if (/\s/.test(ch)) { i++; continue; }
-    if ((ch === "<" || ch === ">" || ch === "=" || ch === "!") && i + 1 < expr.length && expr[i + 1] === "=") {
-      tokens.push(expr.slice(i, i + 2)); i += 2; continue;
-    }
-    if (ch === "<" || ch === ">") { tokens.push(ch); i++; continue; }
-    if ("+-*/%(),".includes(ch)) { tokens.push(ch); i++; continue; }
-    if (/[0-9.]/.test(ch)) {
-      let j = i + 1; while (j < expr.length && /[0-9.]/.test(expr[j])) j++;
-      tokens.push(expr.slice(i, j)); i = j; continue;
-    }
-    if (/[A-Za-z_]/.test(ch)) {
-      let j = i + 1; while (j < expr.length && /[A-Za-z0-9_]/.test(expr[j])) j++;
-      tokens.push(expr.slice(i, j)); i = j; continue;
-    }
-    throw new Error("Unexpected: " + ch);
-  }
-  return tokens;
-}
-
-function parse(tokens) {
-  let i = 0;
-  const peek = () => tokens[i];
-  const take = () => tokens[i++];
-  const expect = (t) => { if (take() !== t) throw new Error("Expected " + t); };
-  function expr() { return comparison(); }
-  function comparison() {
-    let left = additive();
-    while (peek() === "<" || peek() === ">" || peek() === "<=" || peek() === ">=" || peek() === "==" || peek() === "!=") {
-      const op = take(); left = { k: "op", op, left, right: additive() };
-    }
-    return left;
-  }
-  function additive() {
-    let left = term();
-    while (peek() === "+" || peek() === "-") {
-      const op = take(); left = { k: "op", op, left, right: term() };
-    }
-    return left;
-  }
-  function term() {
-    let left = unary();
-    while (peek() === "*" || peek() === "/" || peek() === "%") {
-      const op = take(); left = { k: "op", op, left, right: unary() };
-    }
-    return left;
-  }
-  function unary() {
-    if (peek() === "-") { take(); return { k: "unary", arg: unary() }; }
-    return primary();
-  }
-  function primary() {
-    const t = peek();
-    if (t === undefined) throw new Error("EOF");
-    if (/^[0-9.]/.test(t)) { take(); return { k: "num", v: Number(t) }; }
-    if (t === "(") { take(); const n = expr(); expect(")"); return n; }
-    if (/^[A-Za-z_]/.test(t)) {
-      take();
-      if (peek() === "(") {
-        take();
-        const args = [];
-        if (peek() !== ")") {
-          args.push(expr());
-          while (peek() === ",") { take(); args.push(expr()); }
+  function tokenize(expr) {
+    const tokens = [];
+    let i = 0;
+    while (i < expr.length) {
+      const ch = expr[i];
+      if (ch === "'" || ch === '"') {
+        let value = "";
+        const quote = ch;
+        i++;
+        while (i < expr.length && expr[i] !== quote) {
+          if (expr[i] === "\\") {
+            i++;
+            const whitespace = { n: "\n", r: "\r", t: "\t" };
+          if (Object.hasOwn(whitespace, expr[i])) {
+            value += whitespace[expr[i++]];
+            continue;
+          }
+          if (expr[i] !== quote && expr[i] !== "\\") throw new Error("Invalid string escape");
+          }
+          value += expr[i++];
         }
-        expect(")");
-        return { k: "call", name: t, args };
+        if (i >= expr.length) throw new Error("Unterminated string");
+        i++;
+        tokens.push({ literal: value });
+        continue;
       }
-      return { k: "id", name: t };
+      if (/\s/.test(ch)) { i++; continue; }
+      if ((ch === "<" || ch === ">" || ch === "=" || ch === "!") && i + 1 < expr.length && expr[i + 1] === "=") {
+        tokens.push(expr.slice(i, i + 2)); i += 2; continue;
+      }
+      if (ch === "<" || ch === ">") { tokens.push(ch); i++; continue; }
+      if ("+-*/%(),".includes(ch)) { tokens.push(ch); i++; continue; }
+      if (/[0-9.]/.test(ch)) {
+        let j = i + 1; while (j < expr.length && /[0-9.]/.test(expr[j])) j++;
+        tokens.push(expr.slice(i, j)); i = j; continue;
+      }
+      if (/[A-Za-z_]/.test(ch)) {
+        let j = i + 1; while (j < expr.length && /[A-Za-z0-9_]/.test(expr[j])) j++;
+        tokens.push(expr.slice(i, j)); i = j; continue;
+      }
+      throw new Error("Unexpected: " + ch);
     }
-    throw new Error("Unexpected " + t);
+    return tokens;
   }
-  const node = expr();
-  if (i < tokens.length) throw new Error("Trailing tokens");
-  return node;
-}
 
-function evalNode(node, vars) {
-  switch (node.k) {
-    case "num": return node.v;
-    case "id": return vars[node.name] ?? 0;
-    case "unary": return -evalNode(node.arg, vars);
-    case "op": {
-      const a = evalNode(node.left, vars), b = evalNode(node.right, vars);
-      if (node.op === "+") return a + b;
-      if (node.op === "-") return a - b;
-      if (node.op === "*") return a * b;
-      if (node.op === "/") return b === 0 ? NaN : a / b;
-      if (node.op === "%") return a % b;
-      if (node.op === "<") return a < b ? 1 : 0;
-      if (node.op === ">") return a > b ? 1 : 0;
-      if (node.op === "<=") return a <= b ? 1 : 0;
-      if (node.op === ">=") return a >= b ? 1 : 0;
-      if (node.op === "==") return a === b ? 1 : 0;
-      if (node.op === "!=") return a !== b ? 1 : 0;
-      throw new Error(node.op);
+  function parse(tokens) {
+    let i = 0;
+    const peek = () => tokens[i];
+    const take = () => tokens[i++];
+    const expect = (t) => { if (take() !== t) throw new Error("Expected " + t); };
+    function expr() { return comparison(); }
+    function comparison() {
+      let left = additive();
+      while (peek() === "<" || peek() === ">" || peek() === "<=" || peek() === ">=" || peek() === "==" || peek() === "!=") {
+        const op = take(); left = { k: "op", op, left, right: additive() };
+      }
+      return left;
     }
-    case "call": {
-      const fn = HELPERS[node.name];
-      if (!fn) throw new Error("Unknown " + node.name);
-      return fn(...node.args.map((a) => evalNode(a, vars)));
+    function additive() {
+      let left = term();
+      while (peek() === "+" || peek() === "-") {
+        const op = take(); left = { k: "op", op, left, right: term() };
+      }
+      return left;
     }
+    function term() {
+      let left = unary();
+      while (peek() === "*" || peek() === "/" || peek() === "%") {
+        const op = take(); left = { k: "op", op, left, right: unary() };
+      }
+      return left;
+    }
+    function unary() {
+      if (peek() === "-") { take(); return { k: "unary", arg: unary() }; }
+      return primary();
+    }
+    function primary() {
+      const t = peek();
+      if (t === undefined) throw new Error("EOF");
+      if (typeof t === "object") { take(); return { k: "literal", v: t.literal }; }
+      if (/^[0-9.]/.test(t)) { take(); return { k: "num", v: Number(t) }; }
+      if (t === "(") { take(); const n = expr(); expect(")"); return n; }
+      if (/^[A-Za-z_]/.test(t)) {
+        take();
+        if (peek() === "(") {
+          take();
+          const args = [];
+          if (peek() !== ")") {
+            args.push(expr());
+            while (peek() === ",") { take(); args.push(expr()); }
+          }
+          expect(")");
+          return { k: "call", name: t, args };
+        }
+        return { k: "id", name: t };
+      }
+      throw new Error("Unexpected " + t);
+    }
+    const node = expr();
+    if (i < tokens.length) throw new Error("Trailing tokens");
+    return node;
   }
-}
 
-function evaluate(formula, values) {
-  try {
-    const vars = {};
-    for (const [k, v] of Object.entries(values)) {
-      vars[k] = typeof v === "boolean" ? (v ? 1 : 0) : Number(v) || 0;
+  function evalNode(node, vars) {
+    switch (node.k) {
+      case "literal":
+      case "num": return node.v;
+      case "id":
+        if (!Object.hasOwn(vars, node.name)) throw new Error("Unknown field: " + node.name);
+        return vars[node.name];
+      case "unary": return -evalNode(node.arg, vars);
+      case "op": {
+        const a = evalNode(node.left, vars), b = evalNode(node.right, vars);
+        if (node.op === "+") return a + b;
+        if (node.op === "-") return a - b;
+        if (node.op === "*") return a * b;
+        if (node.op === "/") return b === 0 ? NaN : a / b;
+        if (node.op === "%") return a % b;
+        if (node.op === "<") return a < b ? 1 : 0;
+        if (node.op === ">") return a > b ? 1 : 0;
+        if (node.op === "<=") return a <= b ? 1 : 0;
+        if (node.op === ">=") return a >= b ? 1 : 0;
+        if (node.op === "==") return a === b ? 1 : 0;
+        if (node.op === "!=") return a !== b ? 1 : 0;
+        throw new Error(node.op);
+      }
+      case "call": {
+        const fn = Object.hasOwn(HELPERS, node.name) ? HELPERS[node.name] : undefined;
+        if (!fn) throw new Error("Unknown " + node.name);
+        return fn(...node.args.map((a) => evalNode(a, vars)));
+      }
     }
-    const value = evalNode(parse(tokenize(formula.trim())), vars);
-    if (!Number.isFinite(value)) return { ok: false, error: "Not finite" };
-    return { ok: true, value };
-  } catch (e) {
-    return { ok: false, error: e.message || "Error" };
   }
-}
+
+  function evaluate(formula, values) {
+    try {
+      const vars = Object.create(null);
+      for (const [k, v] of Object.entries(values)) {
+        vars[k] = typeof v === "boolean" ? (v ? 1 : 0) : typeof v === "string" && (!v.trim() || !Number.isFinite(Number(v))) ? v : Number(v) || 0;
+      }
+      const value = evalNode(parse(tokenize(formula.trim())), vars);
+      if (typeof value !== "string" && !Number.isFinite(value)) return { ok: false, error: "Not finite" };
+      return { ok: true, value };
+    } catch (e) {
+      return { ok: false, error: e.message || "Error" };
+    }
+  }
+  return evaluate;
+})();
 
 function format(value, format, prefix = "", suffix = "") {
+  if (typeof value === "string") return prefix + value + suffix;
   if (format === "currency") {
     return prefix + value.toLocaleString("en-GB", { style: "currency", currency: "GBP", maximumFractionDigits: 2 }) + suffix;
   }
