@@ -74,7 +74,7 @@
   .outputs { display: grid; gap: var(--s2); align-content: start; }
   .out { background: var(--surface); border-radius: var(--r-inner); padding: var(--s3) var(--s4); }
   .out .label { font-size: 13px; color: var(--text-muted); }
-  .out .value { margin-top: var(--s1); font-size: 28px; line-height: 1.15; font-weight: 700; letter-spacing: -0.01em; overflow-wrap: anywhere; }
+  .out .value { white-space: pre-line; margin-top: var(--s1); font-size: 28px; line-height: 1.15; font-weight: 700; letter-spacing: -0.01em; overflow-wrap: anywhere; }
   .out .err { margin-top: var(--s1); color: var(--bad); font-size: 13px; }
   footer { font-size: 13px; color: var(--text-muted); }
   @media (min-width: 700px) {
@@ -103,143 +103,173 @@
 <script>
 const TOOL = {"id":"tool-first-home-deposit-calculator-mwc6swd1","name":"First-home deposit calculator","description":"Turns a target price and a monthly saving into a deposit date, with fees and stamp duty as lines the creator can explain.","category":"Personal finance","tags":["first-time buyers","UK","deposit","saving","stamp duty","free sample"],"fields":[{"id":"target_price","label":"Target home price","type":"number","defaultValue":250000,"min":1,"step":1000,"unit":"£","help":"Use a realistic asking price for the area you are considering."},{"id":"deposit_percent","label":"Deposit percentage","type":"slider","defaultValue":10,"min":5,"max":50,"step":1,"unit":"%","help":"A deposit target is not a mortgage offer. Affordability and lender requirements still apply."},{"id":"saved_already","label":"Already saved for this purchase","type":"number","defaultValue":5000,"min":0,"step":100,"unit":"£","help":"Include only money available for the deposit and purchase costs, not your emergency fund."},{"id":"monthly_saving","label":"Monthly saving","type":"number","defaultValue":750,"min":1,"step":25,"unit":"£","help":"Use an amount you can sustain. Assumes contributions at the end of each month."},{"id":"buying_fees","label":"Fees and moving-cost allowance","type":"number","defaultValue":2500,"min":0,"step":100,"unit":"£","help":"Separate from property tax: allow for conveyancing, searches, surveys, mortgage fees and moving. This sample allowance is not a quote; replace it with your estimates."},{"id":"property_nation","label":"Where is the property?","type":"select","defaultValue":"england_ni","options":[{"label":"England or Northern Ireland — SDLT","value":"england_ni"},{"label":"Scotland — LBTT","value":"scotland"},{"label":"Wales — LTT","value":"wales"}],"help":"Choose the property's location. Assumes all buyers meet first-time buyer relief conditions where relief exists. Wales has no separate first-time buyer relief."}],"outputs":[{"id":"deposit_target","label":"Your deposit","formula":"round(target_price * deposit_percent / 100, 2)","format":"currency","prefix":"","description":"The deposit alone, before property tax and fees."},{"id":"property_tax","label":"Stamp duty / property tax","formula":"round(if(property_nation == \"england_ni\", if(target_price \u003c= 500000, max(0, target_price - 300000) * 0.05, max(0, min(target_price, 250000) - 125000) * 0.02 + max(0, min(target_price, 925000) - 250000) * 0.05 + max(0, min(target_price, 1500000) - 925000) * 0.10 + max(0, target_price - 1500000) * 0.12), if(property_nation == \"scotland\", max(0, min(target_price, 250000) - 175000) * 0.02 + max(0, min(target_price, 325000) - 250000) * 0.05 + max(0, min(target_price, 750000) - 325000) * 0.10 + max(0, target_price - 750000) * 0.12, max(0, min(target_price, 400000) - 225000) * 0.06 + max(0, min(target_price, 750000) - 400000) * 0.075 + max(0, min(target_price, 1500000) - 750000) * 0.10 + max(0, target_price - 1500000) * 0.12)), 2)","format":"currency","prefix":"","description":"Estimated SDLT, LBTT or LTT. England and Northern Ireland: qualifying first-time buyers pay nothing up to £300,000 and 5% on the portion up to £500,000; above £500,000, standard rates apply to the whole purchase. Scotland includes first-time buyer relief. Wales uses standard residential rates."},{"id":"total_cash_needed","label":"Total cash needed: deposit + tax + fees","formula":"round(target_price * deposit_percent / 100 + buying_fees + if(property_nation == \"england_ni\", if(target_price \u003c= 500000, max(0, target_price - 300000) * 0.05, max(0, min(target_price, 250000) - 125000) * 0.02 + max(0, min(target_price, 925000) - 250000) * 0.05 + max(0, min(target_price, 1500000) - 925000) * 0.10 + max(0, target_price - 1500000) * 0.12), if(property_nation == \"scotland\", max(0, min(target_price, 250000) - 175000) * 0.02 + max(0, min(target_price, 325000) - 250000) * 0.05 + max(0, min(target_price, 750000) - 325000) * 0.10 + max(0, target_price - 750000) * 0.12, max(0, min(target_price, 400000) - 225000) * 0.06 + max(0, min(target_price, 750000) - 400000) * 0.075 + max(0, min(target_price, 1500000) - 750000) * 0.10 + max(0, target_price - 1500000) * 0.12)), 2)","format":"currency","prefix":"","description":"Your full cash target, including the separate fees allowance entered above. Money already saved counts towards this target."},{"id":"deposit_ready_timeline","label":"Estimated deposit-ready date — months from today","formula":"ceil(max(0, round(target_price * deposit_percent / 100 + buying_fees + if(property_nation == \"england_ni\", if(target_price \u003c= 500000, max(0, target_price - 300000) * 0.05, max(0, min(target_price, 250000) - 125000) * 0.02 + max(0, min(target_price, 925000) - 250000) * 0.05 + max(0, min(target_price, 1500000) - 925000) * 0.10 + max(0, target_price - 1500000) * 0.12), if(property_nation == \"scotland\", max(0, min(target_price, 250000) - 175000) * 0.02 + max(0, min(target_price, 325000) - 250000) * 0.05 + max(0, min(target_price, 750000) - 325000) * 0.10 + max(0, target_price - 750000) * 0.12, max(0, min(target_price, 400000) - 225000) * 0.06 + max(0, min(target_price, 750000) - 400000) * 0.075 + max(0, min(target_price, 1500000) - 750000) * 0.10 + max(0, target_price - 1500000) * 0.12)), 2) - saved_already) / max(1, monthly_saving))","format":"number","suffix":" months from today","description":"Whole monthly contributions needed to cover the deposit, tax and fees after existing savings. Zero means this cash target is already covered. Excludes savings interest, Lifetime ISA bonuses, house-price changes and the time needed to find and complete a purchase. Try increasing monthly saving by £50 to compare timelines."}],"createdAt":"2026-11-11T14:01:04.981Z","updatedAt":"2026-11-11T14:01:04.981Z"};
 
-const HELPERS = {
-  round: (n, d = 0) => { const f = 10 ** (d || 0); return Math.round(n * f) / f; },
-  floor: (n) => Math.floor(n),
-  ceil: (n) => Math.ceil(n),
-  min: (...a) => Math.min(...a),
-  max: (...a) => Math.max(...a),
-  abs: (n) => Math.abs(n),
-  pow: (a, b) => Math.pow(a, b),
-  sqrt: (n) => Math.sqrt(n),
-  clamp: (n, lo, hi) => Math.min(Math.max(n, lo), hi),
-  if: (c, a, b) => (c ? a : b),
-};
+// Craftbench formula runtime v2
+const evaluate = (function createEvaluator() {
+  const HELPERS = {
+    round: (n, d = 0) => { const f = 10 ** (d || 0); return Math.round(n * f) / f; },
+    floor: (n) => Math.floor(n),
+    ceil: (n) => Math.ceil(n),
+    min: (...a) => Math.min(...a),
+    max: (...a) => Math.max(...a),
+    abs: (n) => Math.abs(n),
+    pow: (a, b) => Math.pow(a, b),
+    sqrt: (n) => Math.sqrt(n),
+    clamp: (n, lo, hi) => Math.min(Math.max(n, lo), hi),
+    if: (c, a, b) => (c ? a : b),
+  };
 
-function tokenize(expr) {
-  const tokens = [];
-  let i = 0;
-  while (i < expr.length) {
-    const ch = expr[i];
-    if (/\s/.test(ch)) { i++; continue; }
-    if ((ch === "<" || ch === ">" || ch === "=" || ch === "!") && i + 1 < expr.length && expr[i + 1] === "=") {
-      tokens.push(expr.slice(i, i + 2)); i += 2; continue;
-    }
-    if (ch === "<" || ch === ">") { tokens.push(ch); i++; continue; }
-    if ("+-*/%(),".includes(ch)) { tokens.push(ch); i++; continue; }
-    if (/[0-9.]/.test(ch)) {
-      let j = i + 1; while (j < expr.length && /[0-9.]/.test(expr[j])) j++;
-      tokens.push(expr.slice(i, j)); i = j; continue;
-    }
-    if (/[A-Za-z_]/.test(ch)) {
-      let j = i + 1; while (j < expr.length && /[A-Za-z0-9_]/.test(expr[j])) j++;
-      tokens.push(expr.slice(i, j)); i = j; continue;
-    }
-    throw new Error("Unexpected: " + ch);
-  }
-  return tokens;
-}
-
-function parse(tokens) {
-  let i = 0;
-  const peek = () => tokens[i];
-  const take = () => tokens[i++];
-  const expect = (t) => { if (take() !== t) throw new Error("Expected " + t); };
-  function expr() { return comparison(); }
-  function comparison() {
-    let left = additive();
-    while (peek() === "<" || peek() === ">" || peek() === "<=" || peek() === ">=" || peek() === "==" || peek() === "!=") {
-      const op = take(); left = { k: "op", op, left, right: additive() };
-    }
-    return left;
-  }
-  function additive() {
-    let left = term();
-    while (peek() === "+" || peek() === "-") {
-      const op = take(); left = { k: "op", op, left, right: term() };
-    }
-    return left;
-  }
-  function term() {
-    let left = unary();
-    while (peek() === "*" || peek() === "/" || peek() === "%") {
-      const op = take(); left = { k: "op", op, left, right: unary() };
-    }
-    return left;
-  }
-  function unary() {
-    if (peek() === "-") { take(); return { k: "unary", arg: unary() }; }
-    return primary();
-  }
-  function primary() {
-    const t = peek();
-    if (t === undefined) throw new Error("EOF");
-    if (/^[0-9.]/.test(t)) { take(); return { k: "num", v: Number(t) }; }
-    if (t === "(") { take(); const n = expr(); expect(")"); return n; }
-    if (/^[A-Za-z_]/.test(t)) {
-      take();
-      if (peek() === "(") {
-        take();
-        const args = [];
-        if (peek() !== ")") {
-          args.push(expr());
-          while (peek() === ",") { take(); args.push(expr()); }
+  function tokenize(expr) {
+    const tokens = [];
+    let i = 0;
+    while (i < expr.length) {
+      const ch = expr[i];
+      if (ch === "'" || ch === '"') {
+        let value = "";
+        const quote = ch;
+        i++;
+        while (i < expr.length && expr[i] !== quote) {
+          if (expr[i] === "\\") {
+            i++;
+            const whitespace = { n: "\n", r: "\r", t: "\t" };
+          if (Object.hasOwn(whitespace, expr[i])) {
+            value += whitespace[expr[i++]];
+            continue;
+          }
+          if (expr[i] !== quote && expr[i] !== "\\") throw new Error("Invalid string escape");
+          }
+          value += expr[i++];
         }
-        expect(")");
-        return { k: "call", name: t, args };
+        if (i >= expr.length) throw new Error("Unterminated string");
+        i++;
+        tokens.push({ literal: value });
+        continue;
       }
-      return { k: "id", name: t };
+      if (/\s/.test(ch)) { i++; continue; }
+      if ((ch === "<" || ch === ">" || ch === "=" || ch === "!") && i + 1 < expr.length && expr[i + 1] === "=") {
+        tokens.push(expr.slice(i, i + 2)); i += 2; continue;
+      }
+      if (ch === "<" || ch === ">") { tokens.push(ch); i++; continue; }
+      if ("+-*/%(),".includes(ch)) { tokens.push(ch); i++; continue; }
+      if (/[0-9.]/.test(ch)) {
+        let j = i + 1; while (j < expr.length && /[0-9.]/.test(expr[j])) j++;
+        tokens.push(expr.slice(i, j)); i = j; continue;
+      }
+      if (/[A-Za-z_]/.test(ch)) {
+        let j = i + 1; while (j < expr.length && /[A-Za-z0-9_]/.test(expr[j])) j++;
+        tokens.push(expr.slice(i, j)); i = j; continue;
+      }
+      throw new Error("Unexpected: " + ch);
     }
-    throw new Error("Unexpected " + t);
+    return tokens;
   }
-  const node = expr();
-  if (i < tokens.length) throw new Error("Trailing tokens");
-  return node;
-}
 
-function evalNode(node, vars) {
-  switch (node.k) {
-    case "num": return node.v;
-    case "id": return vars[node.name] ?? 0;
-    case "unary": return -evalNode(node.arg, vars);
-    case "op": {
-      const a = evalNode(node.left, vars), b = evalNode(node.right, vars);
-      if (node.op === "+") return a + b;
-      if (node.op === "-") return a - b;
-      if (node.op === "*") return a * b;
-      if (node.op === "/") return b === 0 ? NaN : a / b;
-      if (node.op === "%") return a % b;
-      if (node.op === "<") return a < b ? 1 : 0;
-      if (node.op === ">") return a > b ? 1 : 0;
-      if (node.op === "<=") return a <= b ? 1 : 0;
-      if (node.op === ">=") return a >= b ? 1 : 0;
-      if (node.op === "==") return a === b ? 1 : 0;
-      if (node.op === "!=") return a !== b ? 1 : 0;
-      throw new Error(node.op);
+  function parse(tokens) {
+    let i = 0;
+    const peek = () => tokens[i];
+    const take = () => tokens[i++];
+    const expect = (t) => { if (take() !== t) throw new Error("Expected " + t); };
+    function expr() { return comparison(); }
+    function comparison() {
+      let left = additive();
+      while (peek() === "<" || peek() === ">" || peek() === "<=" || peek() === ">=" || peek() === "==" || peek() === "!=") {
+        const op = take(); left = { k: "op", op, left, right: additive() };
+      }
+      return left;
     }
-    case "call": {
-      const fn = HELPERS[node.name];
-      if (!fn) throw new Error("Unknown " + node.name);
-      return fn(...node.args.map((a) => evalNode(a, vars)));
+    function additive() {
+      let left = term();
+      while (peek() === "+" || peek() === "-") {
+        const op = take(); left = { k: "op", op, left, right: term() };
+      }
+      return left;
     }
+    function term() {
+      let left = unary();
+      while (peek() === "*" || peek() === "/" || peek() === "%") {
+        const op = take(); left = { k: "op", op, left, right: unary() };
+      }
+      return left;
+    }
+    function unary() {
+      if (peek() === "-") { take(); return { k: "unary", arg: unary() }; }
+      return primary();
+    }
+    function primary() {
+      const t = peek();
+      if (t === undefined) throw new Error("EOF");
+      if (typeof t === "object") { take(); return { k: "literal", v: t.literal }; }
+      if (/^[0-9.]/.test(t)) { take(); return { k: "num", v: Number(t) }; }
+      if (t === "(") { take(); const n = expr(); expect(")"); return n; }
+      if (/^[A-Za-z_]/.test(t)) {
+        take();
+        if (peek() === "(") {
+          take();
+          const args = [];
+          if (peek() !== ")") {
+            args.push(expr());
+            while (peek() === ",") { take(); args.push(expr()); }
+          }
+          expect(")");
+          return { k: "call", name: t, args };
+        }
+        return { k: "id", name: t };
+      }
+      throw new Error("Unexpected " + t);
+    }
+    const node = expr();
+    if (i < tokens.length) throw new Error("Trailing tokens");
+    return node;
   }
-}
 
-function evaluate(formula, values) {
-  try {
-    const vars = {};
-    for (const [k, v] of Object.entries(values)) {
-      vars[k] = typeof v === "boolean" ? (v ? 1 : 0) : Number(v) || 0;
+  function evalNode(node, vars) {
+    switch (node.k) {
+      case "literal":
+      case "num": return node.v;
+      case "id":
+        if (!Object.hasOwn(vars, node.name)) throw new Error("Unknown field: " + node.name);
+        return vars[node.name];
+      case "unary": return -evalNode(node.arg, vars);
+      case "op": {
+        const a = evalNode(node.left, vars), b = evalNode(node.right, vars);
+        if (node.op === "+") return a + b;
+        if (node.op === "-") return a - b;
+        if (node.op === "*") return a * b;
+        if (node.op === "/") return b === 0 ? NaN : a / b;
+        if (node.op === "%") return a % b;
+        if (node.op === "<") return a < b ? 1 : 0;
+        if (node.op === ">") return a > b ? 1 : 0;
+        if (node.op === "<=") return a <= b ? 1 : 0;
+        if (node.op === ">=") return a >= b ? 1 : 0;
+        if (node.op === "==") return a === b ? 1 : 0;
+        if (node.op === "!=") return a !== b ? 1 : 0;
+        throw new Error(node.op);
+      }
+      case "call": {
+        const fn = Object.hasOwn(HELPERS, node.name) ? HELPERS[node.name] : undefined;
+        if (!fn) throw new Error("Unknown " + node.name);
+        return fn(...node.args.map((a) => evalNode(a, vars)));
+      }
     }
-    const value = evalNode(parse(tokenize(formula.trim())), vars);
-    if (!Number.isFinite(value)) return { ok: false, error: "Not finite" };
-    return { ok: true, value };
-  } catch (e) {
-    return { ok: false, error: e.message || "Error" };
   }
-}
+
+  function evaluate(formula, values) {
+    try {
+      const vars = Object.create(null);
+      for (const [k, v] of Object.entries(values)) {
+        vars[k] = typeof v === "boolean" ? (v ? 1 : 0) : typeof v === "string" && (!v.trim() || !Number.isFinite(Number(v))) ? v : Number(v) || 0;
+      }
+      const value = evalNode(parse(tokenize(formula.trim())), vars);
+      if (typeof value !== "string" && !Number.isFinite(value)) return { ok: false, error: "Not finite" };
+      return { ok: true, value };
+    } catch (e) {
+      return { ok: false, error: e.message || "Error" };
+    }
+  }
+  return evaluate;
+})();
 
 function format(value, format, prefix = "", suffix = "") {
+  if (typeof value === "string") return prefix + value + suffix;
   if (format === "currency") {
     return prefix + value.toLocaleString("en-GB", { style: "currency", currency: "GBP", maximumFractionDigits: 2 }) + suffix;
   }
