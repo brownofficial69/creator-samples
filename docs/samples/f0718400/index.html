@@ -74,7 +74,7 @@
   .outputs { display: grid; gap: var(--s2); align-content: start; }
   .out { background: var(--surface); border-radius: var(--r-inner); padding: var(--s3) var(--s4); }
   .out .label { font-size: 13px; color: var(--text-muted); }
-  .out .value { margin-top: var(--s1); font-size: 28px; line-height: 1.15; font-weight: 700; letter-spacing: -0.01em; overflow-wrap: anywhere; }
+  .out .value { white-space: pre-line; margin-top: var(--s1); font-size: 28px; line-height: 1.15; font-weight: 700; letter-spacing: -0.01em; overflow-wrap: anywhere; }
   .out .err { margin-top: var(--s1); color: var(--bad); font-size: 13px; }
   footer { font-size: 13px; color: var(--text-muted); }
   @media (min-width: 700px) {
@@ -101,145 +101,175 @@
   <footer>Made with Craftbench. Works offline.</footer>
 </main>
 <script>
-const TOOL = {"id":"tool-weekly-reflection-journal-builder-mwc8xmcu","name":"Weekly reflection journal","description":"Weekly prompts taken from the creator's own reminders, with room to write.","category":"Digital product planners","tags":["weekly reflection","journal template","creator-owned reminders","Muslim lifestyle","modest fashion","free sample"],"fields":[{"id":"weekly_template","label":"Weekly journal page","type":"textarea","defaultValue":"WEEKLY REFLECTION JOURNAL\n\nWeek beginning: ____________________\n\nAllow around 10 minutes. Use as much or as little of the writing space as you wish.\n\nCREATOR'S OWN REMINDER\n[Creator: paste your own reminder here.]\n\nCREATOR'S OWN WEEKLY PROMPT\n[Creator: write a reflection question drawn from your reminder here.]\n\nMY REFLECTION\n________________________________________________\n________________________________________________\n________________________________________________\n________________________________________________\n________________________________________________\n________________________________________________\n\nOPTIONAL SECOND PROMPT — CREATOR'S OWN WORDS\n[Creator: add another question from your reminder, or remove this section.]\n\nSPACE TO WRITE\n________________________________________________\n________________________________________________\n________________________________________________\n________________________________________________\n\nNOTES TO RETURN TO\n________________________________________________\n________________________________________________","help":"Use a different creator-supplied reminder and prompt for each week. Leave labelled spaces blank until the creator supplies or approves the words. Do not insert generated religious wording, rulings, hadith, verses, du'a or religious advice."},{"id":"free_sample","label":"Prepare the free sample first","type":"toggle","defaultValue":true,"help":"Creates a one-page sample with no build fee or revenue share applied. The creator can send it before agreeing a paid arrangement."},{"id":"journal_weeks","label":"Weeks in the full journal","type":"number","defaultValue":4,"min":1,"max":12,"step":1,"unit":"weeks","help":"Allow one reflection page per week. The free sample always contains one weekly page."},{"id":"pricing_model","label":"Proposed build arrangement","type":"select","defaultValue":"flat_fee","options":[{"label":"Flat build fee","value":"flat_fee"},{"label":"Revenue share","value":"revenue_share"}],"help":"Choose one arrangement for discussion with the creator. No payment or agreement is made by this tool."},{"id":"flat_fee","label":"Proposed flat build fee","type":"number","defaultValue":200,"min":150,"max":300,"step":10,"unit":"GBP","help":"Applies only to the full journal under the flat-fee arrangement."},{"id":"revenue_share","label":"Proposed builder revenue share","type":"number","defaultValue":20,"min":0,"max":100,"step":1,"unit":"%","help":"An editable discussion figure, not an agreed term. Agree the revenue basis, deductions, reporting and payment period separately."}],"outputs":[{"id":"journal_page","label":"Copy-ready weekly page template","formula":"weekly_template","format":"text","description":"Use once for the free sample, or duplicate for the full journal. Replace the labelled creator spaces with her own words before sharing."},{"id":"weekly_pages","label":"Weekly reflection pages","formula":"if(free_sample, 1, journal_weeks)","format":"number","suffix":" pages","description":"One short sitting per page. Each full-journal page needs its own creator-supplied reminder and prompt."},{"id":"proposed_build_fee","label":"Proposed flat build fee","formula":"if(free_sample, 0, if(pricing_model == \"flat_fee\", flat_fee, 0))","format":"currency","prefix":"","description":"£0 for the free sample or revenue-share option. Otherwise, the proposed one-off build fee; not the journal's retail price."},{"id":"proposed_builder_share","label":"Proposed builder revenue share","formula":"if(free_sample, 0, if(pricing_model == \"revenue_share\", revenue_share / 100, 0))","format":"percent","description":"Zero for the free sample or flat-fee option. Any non-zero share remains subject to a separate agreement."}],"createdAt":"2026-11-11T15:00:44.526Z","updatedAt":"2026-11-11T15:00:44.526Z"};
+const TOOL = {"id":"tool-weekly-reflection-journal-builder-mwc8xmcu","name":"Weekly reflection journal","description":"Weekly prompts taken from the creator's own reminders, with room to write.","category":"Digital product planners","tags":["weekly reflection","journal template","creator-owned reminders","Muslim lifestyle","modest fashion","free sample"],"fields":[{"id":"weekly_template","label":"Weekly journal page","type":"textarea","defaultValue":"WEEKLY REFLECTION JOURNAL\n\nWeek beginning: ____________________\n\nAllow around 10 minutes. Use as much or as little of the writing space as you wish.\n\nCREATOR'S OWN REMINDER\n[Creator: paste your own reminder here.]\n\nCREATOR'S OWN WEEKLY PROMPT\n[Creator: write a reflection question drawn from your reminder here.]\n\nMY REFLECTION\n________________________________________________\n________________________________________________\n________________________________________________\n________________________________________________\n________________________________________________\n________________________________________________\n\nOPTIONAL SECOND PROMPT — CREATOR'S OWN WORDS\n[Creator: add another question from your reminder, or remove this section.]\n\nSPACE TO WRITE\n________________________________________________\n________________________________________________\n________________________________________________\n________________________________________________\n\nNOTES TO RETURN TO\n________________________________________________\n________________________________________________","help":"Use a different creator-supplied reminder and prompt for each week. Leave labelled spaces blank until the creator supplies or approves the words. Do not insert generated religious wording, rulings, hadith, verses, du'a or religious advice."},{"id":"free_sample","label":"Prepare the free sample first","type":"toggle","defaultValue":true,"help":"Creates a one-page sample with no build fee or revenue share applied. The creator can send it before agreeing a paid arrangement."},{"id":"journal_weeks","label":"Weeks in the full journal","type":"number","defaultValue":4,"min":1,"max":12,"step":1,"unit":"weeks","help":"Allow one reflection page per week. The free sample always contains one weekly page."}],"outputs":[{"id":"journal_page","label":"Copy-ready weekly page template","formula":"weekly_template","format":"text","description":"Use once for the free sample, or duplicate for the full journal. Replace the labelled creator spaces with her own words before sharing."},{"id":"weekly_pages","label":"Weekly reflection pages","formula":"if(free_sample, 1, journal_weeks)","format":"number","suffix":" pages","description":"One short sitting per page. Each full-journal page needs its own creator-supplied reminder and prompt."}],"createdAt":"2026-11-11T15:00:44.526Z","updatedAt":"2026-11-11T15:00:44.526Z"};
 
-const HELPERS = {
-  round: (n, d = 0) => { const f = 10 ** (d || 0); return Math.round(n * f) / f; },
-  floor: (n) => Math.floor(n),
-  ceil: (n) => Math.ceil(n),
-  min: (...a) => Math.min(...a),
-  max: (...a) => Math.max(...a),
-  abs: (n) => Math.abs(n),
-  pow: (a, b) => Math.pow(a, b),
-  sqrt: (n) => Math.sqrt(n),
-  clamp: (n, lo, hi) => Math.min(Math.max(n, lo), hi),
-  if: (c, a, b) => (c ? a : b),
-};
+// Craftbench formula runtime v2
+const evaluate = (function createEvaluator() {
+  const HELPERS = {
+    round: (n, d = 0) => { const f = 10 ** (d || 0); return Math.round(n * f) / f; },
+    floor: (n) => Math.floor(n),
+    ceil: (n) => Math.ceil(n),
+    min: (...a) => Math.min(...a),
+    max: (...a) => Math.max(...a),
+    abs: (n) => Math.abs(n),
+    pow: (a, b) => Math.pow(a, b),
+    sqrt: (n) => Math.sqrt(n),
+    clamp: (n, lo, hi) => Math.min(Math.max(n, lo), hi),
+    if: (c, a, b) => (c ? a : b),
+  };
 
-function tokenize(expr) {
-  const tokens = [];
-  let i = 0;
-  while (i < expr.length) {
-    const ch = expr[i];
-    if (/\s/.test(ch)) { i++; continue; }
-    if ((ch === "<" || ch === ">" || ch === "=" || ch === "!") && i + 1 < expr.length && expr[i + 1] === "=") {
-      tokens.push(expr.slice(i, i + 2)); i += 2; continue;
-    }
-    if (ch === "<" || ch === ">") { tokens.push(ch); i++; continue; }
-    if ("+-*/%(),".includes(ch)) { tokens.push(ch); i++; continue; }
-    if (/[0-9.]/.test(ch)) {
-      let j = i + 1; while (j < expr.length && /[0-9.]/.test(expr[j])) j++;
-      tokens.push(expr.slice(i, j)); i = j; continue;
-    }
-    if (/[A-Za-z_]/.test(ch)) {
-      let j = i + 1; while (j < expr.length && /[A-Za-z0-9_]/.test(expr[j])) j++;
-      tokens.push(expr.slice(i, j)); i = j; continue;
-    }
-    throw new Error("Unexpected: " + ch);
-  }
-  return tokens;
-}
-
-function parse(tokens) {
-  let i = 0;
-  const peek = () => tokens[i];
-  const take = () => tokens[i++];
-  const expect = (t) => { if (take() !== t) throw new Error("Expected " + t); };
-  function expr() { return comparison(); }
-  function comparison() {
-    let left = additive();
-    while (peek() === "<" || peek() === ">" || peek() === "<=" || peek() === ">=" || peek() === "==" || peek() === "!=") {
-      const op = take(); left = { k: "op", op, left, right: additive() };
-    }
-    return left;
-  }
-  function additive() {
-    let left = term();
-    while (peek() === "+" || peek() === "-") {
-      const op = take(); left = { k: "op", op, left, right: term() };
-    }
-    return left;
-  }
-  function term() {
-    let left = unary();
-    while (peek() === "*" || peek() === "/" || peek() === "%") {
-      const op = take(); left = { k: "op", op, left, right: unary() };
-    }
-    return left;
-  }
-  function unary() {
-    if (peek() === "-") { take(); return { k: "unary", arg: unary() }; }
-    return primary();
-  }
-  function primary() {
-    const t = peek();
-    if (t === undefined) throw new Error("EOF");
-    if (/^[0-9.]/.test(t)) { take(); return { k: "num", v: Number(t) }; }
-    if (t === "(") { take(); const n = expr(); expect(")"); return n; }
-    if (/^[A-Za-z_]/.test(t)) {
-      take();
-      if (peek() === "(") {
-        take();
-        const args = [];
-        if (peek() !== ")") {
-          args.push(expr());
-          while (peek() === ",") { take(); args.push(expr()); }
+  function tokenize(expr) {
+    const tokens = [];
+    let i = 0;
+    while (i < expr.length) {
+      const ch = expr[i];
+      if (ch === "'" || ch === '"') {
+        let value = "";
+        const quote = ch;
+        i++;
+        while (i < expr.length && expr[i] !== quote) {
+          if (expr[i] === "\\") {
+            i++;
+            const whitespace = { n: "\n", r: "\r", t: "\t" };
+          if (Object.hasOwn(whitespace, expr[i])) {
+            value += whitespace[expr[i++]];
+            continue;
+          }
+          if (expr[i] !== quote && expr[i] !== "\\") throw new Error("Invalid string escape");
+          }
+          value += expr[i++];
         }
-        expect(")");
-        return { k: "call", name: t, args };
+        if (i >= expr.length) throw new Error("Unterminated string");
+        i++;
+        tokens.push({ literal: value });
+        continue;
       }
-      return { k: "id", name: t };
+      if (/\s/.test(ch)) { i++; continue; }
+      if ((ch === "<" || ch === ">" || ch === "=" || ch === "!") && i + 1 < expr.length && expr[i + 1] === "=") {
+        tokens.push(expr.slice(i, i + 2)); i += 2; continue;
+      }
+      if (ch === "<" || ch === ">") { tokens.push(ch); i++; continue; }
+      if ("+-*/%(),".includes(ch)) { tokens.push(ch); i++; continue; }
+      if (/[0-9.]/.test(ch)) {
+        let j = i + 1; while (j < expr.length && /[0-9.]/.test(expr[j])) j++;
+        tokens.push(expr.slice(i, j)); i = j; continue;
+      }
+      if (/[A-Za-z_]/.test(ch)) {
+        let j = i + 1; while (j < expr.length && /[A-Za-z0-9_]/.test(expr[j])) j++;
+        tokens.push(expr.slice(i, j)); i = j; continue;
+      }
+      throw new Error("Unexpected: " + ch);
     }
-    throw new Error("Unexpected " + t);
+    return tokens;
   }
-  const node = expr();
-  if (i < tokens.length) throw new Error("Trailing tokens");
-  return node;
-}
 
-function evalNode(node, vars) {
-  switch (node.k) {
-    case "num": return node.v;
-    case "id": return vars[node.name] ?? 0;
-    case "unary": return -evalNode(node.arg, vars);
-    case "op": {
-      const a = evalNode(node.left, vars), b = evalNode(node.right, vars);
-      if (node.op === "+") return a + b;
-      if (node.op === "-") return a - b;
-      if (node.op === "*") return a * b;
-      if (node.op === "/") return b === 0 ? NaN : a / b;
-      if (node.op === "%") return a % b;
-      if (node.op === "<") return a < b ? 1 : 0;
-      if (node.op === ">") return a > b ? 1 : 0;
-      if (node.op === "<=") return a <= b ? 1 : 0;
-      if (node.op === ">=") return a >= b ? 1 : 0;
-      if (node.op === "==") return a === b ? 1 : 0;
-      if (node.op === "!=") return a !== b ? 1 : 0;
-      throw new Error(node.op);
+  function parse(tokens) {
+    let i = 0;
+    const peek = () => tokens[i];
+    const take = () => tokens[i++];
+    const expect = (t) => { if (take() !== t) throw new Error("Expected " + t); };
+    function expr() { return comparison(); }
+    function comparison() {
+      let left = additive();
+      while (peek() === "<" || peek() === ">" || peek() === "<=" || peek() === ">=" || peek() === "==" || peek() === "!=") {
+        const op = take(); left = { k: "op", op, left, right: additive() };
+      }
+      return left;
     }
-    case "call": {
-      const fn = HELPERS[node.name];
-      if (!fn) throw new Error("Unknown " + node.name);
-      return fn(...node.args.map((a) => evalNode(a, vars)));
+    function additive() {
+      let left = term();
+      while (peek() === "+" || peek() === "-") {
+        const op = take(); left = { k: "op", op, left, right: term() };
+      }
+      return left;
     }
+    function term() {
+      let left = unary();
+      while (peek() === "*" || peek() === "/" || peek() === "%") {
+        const op = take(); left = { k: "op", op, left, right: unary() };
+      }
+      return left;
+    }
+    function unary() {
+      if (peek() === "-") { take(); return { k: "unary", arg: unary() }; }
+      return primary();
+    }
+    function primary() {
+      const t = peek();
+      if (t === undefined) throw new Error("EOF");
+      if (typeof t === "object") { take(); return { k: "literal", v: t.literal }; }
+      if (/^[0-9.]/.test(t)) { take(); return { k: "num", v: Number(t) }; }
+      if (t === "(") { take(); const n = expr(); expect(")"); return n; }
+      if (/^[A-Za-z_]/.test(t)) {
+        take();
+        if (peek() === "(") {
+          take();
+          const args = [];
+          if (peek() !== ")") {
+            args.push(expr());
+            while (peek() === ",") { take(); args.push(expr()); }
+          }
+          expect(")");
+          return { k: "call", name: t, args };
+        }
+        return { k: "id", name: t };
+      }
+      throw new Error("Unexpected " + t);
+    }
+    const node = expr();
+    if (i < tokens.length) throw new Error("Trailing tokens");
+    return node;
   }
-}
 
-function evaluate(formula, values) {
-  try {
-    const vars = {};
-    for (const [k, v] of Object.entries(values)) {
-      vars[k] = typeof v === "boolean" ? (v ? 1 : 0) : Number(v) || 0;
+  function evalNode(node, vars) {
+    switch (node.k) {
+      case "literal":
+      case "num": return node.v;
+      case "id":
+        if (!Object.hasOwn(vars, node.name)) throw new Error("Unknown field: " + node.name);
+        return vars[node.name];
+      case "unary": return -evalNode(node.arg, vars);
+      case "op": {
+        const a = evalNode(node.left, vars), b = evalNode(node.right, vars);
+        if (node.op === "+") return a + b;
+        if (node.op === "-") return a - b;
+        if (node.op === "*") return a * b;
+        if (node.op === "/") return b === 0 ? NaN : a / b;
+        if (node.op === "%") return a % b;
+        if (node.op === "<") return a < b ? 1 : 0;
+        if (node.op === ">") return a > b ? 1 : 0;
+        if (node.op === "<=") return a <= b ? 1 : 0;
+        if (node.op === ">=") return a >= b ? 1 : 0;
+        if (node.op === "==") return a === b ? 1 : 0;
+        if (node.op === "!=") return a !== b ? 1 : 0;
+        throw new Error(node.op);
+      }
+      case "call": {
+        const fn = Object.hasOwn(HELPERS, node.name) ? HELPERS[node.name] : undefined;
+        if (!fn) throw new Error("Unknown " + node.name);
+        return fn(...node.args.map((a) => evalNode(a, vars)));
+      }
     }
-    const value = evalNode(parse(tokenize(formula.trim())), vars);
-    if (!Number.isFinite(value)) return { ok: false, error: "Not finite" };
-    return { ok: true, value };
-  } catch (e) {
-    return { ok: false, error: e.message || "Error" };
   }
-}
+
+  function evaluate(formula, values) {
+    try {
+      const vars = Object.create(null);
+      for (const [k, v] of Object.entries(values)) {
+        vars[k] = typeof v === "boolean" ? (v ? 1 : 0) : typeof v === "string" && (!v.trim() || !Number.isFinite(Number(v))) ? v : Number(v) || 0;
+      }
+      const value = evalNode(parse(tokenize(formula.trim())), vars);
+      if (typeof value !== "string" && !Number.isFinite(value)) return { ok: false, error: "Not finite" };
+      return { ok: true, value };
+    } catch (e) {
+      return { ok: false, error: e.message || "Error" };
+    }
+  }
+  return evaluate;
+})();
 
 function format(value, format, prefix = "", suffix = "") {
+  if (typeof value === "string") return prefix + value + suffix;
   if (format === "currency") {
     return prefix + value.toLocaleString("en-GB", { style: "currency", currency: "GBP", maximumFractionDigits: 2 }) + suffix;
   }
