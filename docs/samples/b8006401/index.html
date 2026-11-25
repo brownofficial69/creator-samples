@@ -74,7 +74,7 @@
   .outputs { display: grid; gap: var(--s2); align-content: start; }
   .out { background: var(--surface); border-radius: var(--r-inner); padding: var(--s3) var(--s4); }
   .out .label { font-size: 13px; color: var(--text-muted); }
-  .out .value { margin-top: var(--s1); font-size: 28px; line-height: 1.15; font-weight: 700; letter-spacing: -0.01em; overflow-wrap: anywhere; }
+  .out .value { white-space: pre-line; margin-top: var(--s1); font-size: 28px; line-height: 1.15; font-weight: 700; letter-spacing: -0.01em; overflow-wrap: anywhere; }
   .out .err { margin-top: var(--s1); color: var(--bad); font-size: 13px; }
   footer { font-size: 13px; color: var(--text-muted); }
   @media (min-width: 700px) {
@@ -101,145 +101,175 @@
   <footer>Made with Craftbench. Works offline.</footer>
 </main>
 <script>
-const TOOL = {"id":"tool-revision-timetable-builder-mwc6vxwy","name":"Revision timetable builder","description":"A viewer enters exams and dates and gets a week-by-week revision plan they can print.","category":"Study and university life","tags":["revision","university","student budgeting","printable","timetable","free sample"],"fields":[{"id":"exam_one","label":"First subject and exam date","type":"text","defaultValue":"Biology — sample exam in 14 days","placeholder":"e.g. Biology — 18 June","help":"This label appears on every weekly row. Replace the sample with your subject and exam date."},{"id":"days_one","label":"Days until the first exam","type":"number","defaultValue":14,"min":0,"max":365,"step":1,"unit":"days","help":"Count calendar days from today: tomorrow is 1. Enter 0 if the exam is today or has passed. The exam day itself is not counted as a revision day."},{"id":"exam_two","label":"Second subject and exam date","type":"text","defaultValue":"Psychology — sample exam in 28 days","placeholder":"e.g. Psychology — 25 June","help":"Only one exam? Enter 'No second exam' and set its countdown to 0."},{"id":"days_two","label":"Days until the second exam","type":"number","defaultValue":28,"min":0,"max":365,"step":1,"unit":"days","help":"Enter the countdown separately; the tool does not calculate it from the date label."},{"id":"weekly_hours","label":"Realistic revision time each week","type":"number","defaultValue":10,"min":0,"max":60,"step":0.5,"unit":"hours","help":"Allow for lectures, paid work, meals, sleep and breaks first. This is a maximum, not a target you must reach."}],"outputs":[{"id":"week_one","label":"Week 1 · today to day 6","formula":"if(days_one \u003c= 0, exam_one + ': no revision scheduled', exam_one + ': ' + floor(2 * weekly_hours * (if(days_one > 0, 1 / max(1, days_one), 0) / max(0.000001, if(days_one > 0, 1 / max(1, days_one), 0) + if(days_two > 0, 1 / max(1, days_two), 0))) * min(7, max(0, days_one)) / 7) / 2 + ' h') + ' | ' + if(days_two \u003c= 0, exam_two + ': no revision scheduled', exam_two + ': ' + floor(2 * weekly_hours * (if(days_two > 0, 1 / max(1, days_two), 0) / max(0.000001, if(days_one > 0, 1 / max(1, days_one), 0) + if(days_two > 0, 1 / max(1, days_two), 0))) * min(7, max(0, days_two)) / 7) / 2 + ' h')","format":"text","description":"Choose the topics for each subject, then pencil the hours into your diary. Allocations round down to half-hours."},{"id":"week_two","label":"Week 2 · days 7–13","formula":"if(days_one \u003c= 7, exam_one + ': no revision scheduled', exam_one + ': ' + floor(2 * weekly_hours * (if(days_one > 7, 1 / max(1, days_one - 7), 0) / max(0.000001, if(days_one > 7, 1 / max(1, days_one - 7), 0) + if(days_two > 7, 1 / max(1, days_two - 7), 0))) * min(7, max(0, days_one - 7)) / 7) / 2 + ' h') + ' | ' + if(days_two \u003c= 7, exam_two + ': no revision scheduled', exam_two + ': ' + floor(2 * weekly_hours * (if(days_two > 7, 1 / max(1, days_two - 7), 0) / max(0.000001, if(days_one > 7, 1 / max(1, days_one - 7), 0) + if(days_two > 7, 1 / max(1, days_two - 7), 0))) * min(7, max(0, days_two - 7)) / 7) / 2 + ' h')","format":"text","description":"Use recall questions to identify weak topics. Schedule any allocated time before the relevant exam, never after it."},{"id":"week_three","label":"Week 3 · days 14–20","formula":"if(days_one \u003c= 14, exam_one + ': no revision scheduled', exam_one + ': ' + floor(2 * weekly_hours * (if(days_one > 14, 1 / max(1, days_one - 14), 0) / max(0.000001, if(days_one > 14, 1 / max(1, days_one - 14), 0) + if(days_two > 14, 1 / max(1, days_two - 14), 0))) * min(7, max(0, days_one - 14)) / 7) / 2 + ' h') + ' | ' + if(days_two \u003c= 14, exam_two + ': no revision scheduled', exam_two + ': ' + floor(2 * weekly_hours * (if(days_two > 14, 1 / max(1, days_two - 14), 0) / max(0.000001, if(days_one > 14, 1 / max(1, days_one - 14), 0) + if(days_two > 14, 1 / max(1, days_two - 14), 0))) * min(7, max(0, days_two - 14)) / 7) / 2 + ' h')","format":"text","description":"Include timed practice and time to mark it. Weekly hours are reduced proportionally when an exam falls part-way through the week; unused time remains free."},{"id":"week_four","label":"Week 4 · days 21–27","formula":"if(days_one \u003c= 21, exam_one + ': no revision scheduled', exam_one + ': ' + floor(2 * weekly_hours * (if(days_one > 21, 1 / max(1, days_one - 21), 0) / max(0.000001, if(days_one > 21, 1 / max(1, days_one - 21), 0) + if(days_two > 21, 1 / max(1, days_two - 21), 0))) * min(7, max(0, days_one - 21)) / 7) / 2 + ' h') + ' | ' + if(days_two \u003c= 21, exam_two + ': no revision scheduled', exam_two + ': ' + floor(2 * weekly_hours * (if(days_two > 21, 1 / max(1, days_two - 21), 0) / max(0.000001, if(days_one > 21, 1 / max(1, days_one - 21), 0) + if(days_two > 21, 1 / max(1, days_two - 21), 0))) * min(7, max(0, days_two - 21)) / 7) / 2 + ' h')","format":"text","description":"Keep the final evening manageable and protect sleep. Print all four rows, add actual calendar dates and tick off sessions as you finish."}],"createdAt":"2026-11-11T14:03:26.962Z","updatedAt":"2026-11-11T14:03:26.962Z"};
+const TOOL = {"id":"tool-revision-timetable-mwtu12ss","name":"Revision timetable builder","description":"Plan revision for two exams over the next four weeks. Enter the days until each exam and your weekly study hours. Time is shared evenly on days when both exams are ahead. Use your browser’s Print command to keep a copy.","category":"study-planner","tags":["revision","timetable","study-planner"],"fields":[{"id":"days_first","type":"number","label":"Days until Exam 1","defaultValue":14,"min":0,"max":365,"step":1},{"id":"days_second","type":"number","label":"Days until Exam 2","defaultValue":28,"min":0,"max":365,"step":1},{"id":"hours_week","type":"number","label":"Study hours available per week","defaultValue":10,"min":0,"max":168,"step":0.5}],"outputs":[{"id":"week_1_exam_1","label":"Week 1 · Exam 1","formula":"floor(100 * hours_week / 7 * (clamp(days_first - 0, 0, 7) - min(clamp(days_first - 0, 0, 7), clamp(days_second - 0, 0, 7)) / 2)) / 100","format":"number","suffix":" h"},{"id":"week_1_exam_2","label":"Week 1 · Exam 2","formula":"floor(100 * hours_week / 7 * (clamp(days_second - 0, 0, 7) - min(clamp(days_first - 0, 0, 7), clamp(days_second - 0, 0, 7)) / 2)) / 100","format":"number","suffix":" h"},{"id":"week_2_exam_1","label":"Week 2 · Exam 1","formula":"floor(100 * hours_week / 7 * (clamp(days_first - 7, 0, 7) - min(clamp(days_first - 7, 0, 7), clamp(days_second - 7, 0, 7)) / 2)) / 100","format":"number","suffix":" h"},{"id":"week_2_exam_2","label":"Week 2 · Exam 2","formula":"floor(100 * hours_week / 7 * (clamp(days_second - 7, 0, 7) - min(clamp(days_first - 7, 0, 7), clamp(days_second - 7, 0, 7)) / 2)) / 100","format":"number","suffix":" h"},{"id":"week_3_exam_1","label":"Week 3 · Exam 1","formula":"floor(100 * hours_week / 7 * (clamp(days_first - 14, 0, 7) - min(clamp(days_first - 14, 0, 7), clamp(days_second - 14, 0, 7)) / 2)) / 100","format":"number","suffix":" h"},{"id":"week_3_exam_2","label":"Week 3 · Exam 2","formula":"floor(100 * hours_week / 7 * (clamp(days_second - 14, 0, 7) - min(clamp(days_first - 14, 0, 7), clamp(days_second - 14, 0, 7)) / 2)) / 100","format":"number","suffix":" h"},{"id":"week_4_exam_1","label":"Week 4 · Exam 1","formula":"floor(100 * hours_week / 7 * (clamp(days_first - 21, 0, 7) - min(clamp(days_first - 21, 0, 7), clamp(days_second - 21, 0, 7)) / 2)) / 100","format":"number","suffix":" h"},{"id":"week_4_exam_2","label":"Week 4 · Exam 2","formula":"floor(100 * hours_week / 7 * (clamp(days_second - 21, 0, 7) - min(clamp(days_first - 21, 0, 7), clamp(days_second - 21, 0, 7)) / 2)) / 100","format":"number","suffix":" h"}],"createdAt":"2026-11-23T22:23:22.732Z","updatedAt":"2026-11-23T22:23:22.732Z"};
 
-const HELPERS = {
-  round: (n, d = 0) => { const f = 10 ** (d || 0); return Math.round(n * f) / f; },
-  floor: (n) => Math.floor(n),
-  ceil: (n) => Math.ceil(n),
-  min: (...a) => Math.min(...a),
-  max: (...a) => Math.max(...a),
-  abs: (n) => Math.abs(n),
-  pow: (a, b) => Math.pow(a, b),
-  sqrt: (n) => Math.sqrt(n),
-  clamp: (n, lo, hi) => Math.min(Math.max(n, lo), hi),
-  if: (c, a, b) => (c ? a : b),
-};
+// Craftbench formula runtime v2
+const evaluate = (function createEvaluator() {
+  const HELPERS = {
+    round: (n, d = 0) => { const f = 10 ** (d || 0); return Math.round(n * f) / f; },
+    floor: (n) => Math.floor(n),
+    ceil: (n) => Math.ceil(n),
+    min: (...a) => Math.min(...a),
+    max: (...a) => Math.max(...a),
+    abs: (n) => Math.abs(n),
+    pow: (a, b) => Math.pow(a, b),
+    sqrt: (n) => Math.sqrt(n),
+    clamp: (n, lo, hi) => Math.min(Math.max(n, lo), hi),
+    if: (c, a, b) => (c ? a : b),
+  };
 
-function tokenize(expr) {
-  const tokens = [];
-  let i = 0;
-  while (i < expr.length) {
-    const ch = expr[i];
-    if (/\s/.test(ch)) { i++; continue; }
-    if ((ch === "<" || ch === ">" || ch === "=" || ch === "!") && i + 1 < expr.length && expr[i + 1] === "=") {
-      tokens.push(expr.slice(i, i + 2)); i += 2; continue;
-    }
-    if (ch === "<" || ch === ">") { tokens.push(ch); i++; continue; }
-    if ("+-*/%(),".includes(ch)) { tokens.push(ch); i++; continue; }
-    if (/[0-9.]/.test(ch)) {
-      let j = i + 1; while (j < expr.length && /[0-9.]/.test(expr[j])) j++;
-      tokens.push(expr.slice(i, j)); i = j; continue;
-    }
-    if (/[A-Za-z_]/.test(ch)) {
-      let j = i + 1; while (j < expr.length && /[A-Za-z0-9_]/.test(expr[j])) j++;
-      tokens.push(expr.slice(i, j)); i = j; continue;
-    }
-    throw new Error("Unexpected: " + ch);
-  }
-  return tokens;
-}
-
-function parse(tokens) {
-  let i = 0;
-  const peek = () => tokens[i];
-  const take = () => tokens[i++];
-  const expect = (t) => { if (take() !== t) throw new Error("Expected " + t); };
-  function expr() { return comparison(); }
-  function comparison() {
-    let left = additive();
-    while (peek() === "<" || peek() === ">" || peek() === "<=" || peek() === ">=" || peek() === "==" || peek() === "!=") {
-      const op = take(); left = { k: "op", op, left, right: additive() };
-    }
-    return left;
-  }
-  function additive() {
-    let left = term();
-    while (peek() === "+" || peek() === "-") {
-      const op = take(); left = { k: "op", op, left, right: term() };
-    }
-    return left;
-  }
-  function term() {
-    let left = unary();
-    while (peek() === "*" || peek() === "/" || peek() === "%") {
-      const op = take(); left = { k: "op", op, left, right: unary() };
-    }
-    return left;
-  }
-  function unary() {
-    if (peek() === "-") { take(); return { k: "unary", arg: unary() }; }
-    return primary();
-  }
-  function primary() {
-    const t = peek();
-    if (t === undefined) throw new Error("EOF");
-    if (/^[0-9.]/.test(t)) { take(); return { k: "num", v: Number(t) }; }
-    if (t === "(") { take(); const n = expr(); expect(")"); return n; }
-    if (/^[A-Za-z_]/.test(t)) {
-      take();
-      if (peek() === "(") {
-        take();
-        const args = [];
-        if (peek() !== ")") {
-          args.push(expr());
-          while (peek() === ",") { take(); args.push(expr()); }
+  function tokenize(expr) {
+    const tokens = [];
+    let i = 0;
+    while (i < expr.length) {
+      const ch = expr[i];
+      if (ch === "'" || ch === '"') {
+        let value = "";
+        const quote = ch;
+        i++;
+        while (i < expr.length && expr[i] !== quote) {
+          if (expr[i] === "\\") {
+            i++;
+            const whitespace = { n: "\n", r: "\r", t: "\t" };
+          if (Object.hasOwn(whitespace, expr[i])) {
+            value += whitespace[expr[i++]];
+            continue;
+          }
+          if (expr[i] !== quote && expr[i] !== "\\") throw new Error("Invalid string escape");
+          }
+          value += expr[i++];
         }
-        expect(")");
-        return { k: "call", name: t, args };
+        if (i >= expr.length) throw new Error("Unterminated string");
+        i++;
+        tokens.push({ literal: value });
+        continue;
       }
-      return { k: "id", name: t };
+      if (/\s/.test(ch)) { i++; continue; }
+      if ((ch === "<" || ch === ">" || ch === "=" || ch === "!") && i + 1 < expr.length && expr[i + 1] === "=") {
+        tokens.push(expr.slice(i, i + 2)); i += 2; continue;
+      }
+      if (ch === "<" || ch === ">") { tokens.push(ch); i++; continue; }
+      if ("+-*/%(),".includes(ch)) { tokens.push(ch); i++; continue; }
+      if (/[0-9.]/.test(ch)) {
+        let j = i + 1; while (j < expr.length && /[0-9.]/.test(expr[j])) j++;
+        tokens.push(expr.slice(i, j)); i = j; continue;
+      }
+      if (/[A-Za-z_]/.test(ch)) {
+        let j = i + 1; while (j < expr.length && /[A-Za-z0-9_]/.test(expr[j])) j++;
+        tokens.push(expr.slice(i, j)); i = j; continue;
+      }
+      throw new Error("Unexpected: " + ch);
     }
-    throw new Error("Unexpected " + t);
+    return tokens;
   }
-  const node = expr();
-  if (i < tokens.length) throw new Error("Trailing tokens");
-  return node;
-}
 
-function evalNode(node, vars) {
-  switch (node.k) {
-    case "num": return node.v;
-    case "id": return vars[node.name] ?? 0;
-    case "unary": return -evalNode(node.arg, vars);
-    case "op": {
-      const a = evalNode(node.left, vars), b = evalNode(node.right, vars);
-      if (node.op === "+") return a + b;
-      if (node.op === "-") return a - b;
-      if (node.op === "*") return a * b;
-      if (node.op === "/") return b === 0 ? NaN : a / b;
-      if (node.op === "%") return a % b;
-      if (node.op === "<") return a < b ? 1 : 0;
-      if (node.op === ">") return a > b ? 1 : 0;
-      if (node.op === "<=") return a <= b ? 1 : 0;
-      if (node.op === ">=") return a >= b ? 1 : 0;
-      if (node.op === "==") return a === b ? 1 : 0;
-      if (node.op === "!=") return a !== b ? 1 : 0;
-      throw new Error(node.op);
+  function parse(tokens) {
+    let i = 0;
+    const peek = () => tokens[i];
+    const take = () => tokens[i++];
+    const expect = (t) => { if (take() !== t) throw new Error("Expected " + t); };
+    function expr() { return comparison(); }
+    function comparison() {
+      let left = additive();
+      while (peek() === "<" || peek() === ">" || peek() === "<=" || peek() === ">=" || peek() === "==" || peek() === "!=") {
+        const op = take(); left = { k: "op", op, left, right: additive() };
+      }
+      return left;
     }
-    case "call": {
-      const fn = HELPERS[node.name];
-      if (!fn) throw new Error("Unknown " + node.name);
-      return fn(...node.args.map((a) => evalNode(a, vars)));
+    function additive() {
+      let left = term();
+      while (peek() === "+" || peek() === "-") {
+        const op = take(); left = { k: "op", op, left, right: term() };
+      }
+      return left;
     }
+    function term() {
+      let left = unary();
+      while (peek() === "*" || peek() === "/" || peek() === "%") {
+        const op = take(); left = { k: "op", op, left, right: unary() };
+      }
+      return left;
+    }
+    function unary() {
+      if (peek() === "-") { take(); return { k: "unary", arg: unary() }; }
+      return primary();
+    }
+    function primary() {
+      const t = peek();
+      if (t === undefined) throw new Error("EOF");
+      if (typeof t === "object") { take(); return { k: "literal", v: t.literal }; }
+      if (/^[0-9.]/.test(t)) { take(); return { k: "num", v: Number(t) }; }
+      if (t === "(") { take(); const n = expr(); expect(")"); return n; }
+      if (/^[A-Za-z_]/.test(t)) {
+        take();
+        if (peek() === "(") {
+          take();
+          const args = [];
+          if (peek() !== ")") {
+            args.push(expr());
+            while (peek() === ",") { take(); args.push(expr()); }
+          }
+          expect(")");
+          return { k: "call", name: t, args };
+        }
+        return { k: "id", name: t };
+      }
+      throw new Error("Unexpected " + t);
+    }
+    const node = expr();
+    if (i < tokens.length) throw new Error("Trailing tokens");
+    return node;
   }
-}
 
-function evaluate(formula, values) {
-  try {
-    const vars = {};
-    for (const [k, v] of Object.entries(values)) {
-      vars[k] = typeof v === "boolean" ? (v ? 1 : 0) : Number(v) || 0;
+  function evalNode(node, vars) {
+    switch (node.k) {
+      case "literal":
+      case "num": return node.v;
+      case "id":
+        if (!Object.hasOwn(vars, node.name)) throw new Error("Unknown field: " + node.name);
+        return vars[node.name];
+      case "unary": return -evalNode(node.arg, vars);
+      case "op": {
+        const a = evalNode(node.left, vars), b = evalNode(node.right, vars);
+        if (node.op === "+") return a + b;
+        if (node.op === "-") return a - b;
+        if (node.op === "*") return a * b;
+        if (node.op === "/") return b === 0 ? NaN : a / b;
+        if (node.op === "%") return a % b;
+        if (node.op === "<") return a < b ? 1 : 0;
+        if (node.op === ">") return a > b ? 1 : 0;
+        if (node.op === "<=") return a <= b ? 1 : 0;
+        if (node.op === ">=") return a >= b ? 1 : 0;
+        if (node.op === "==") return a === b ? 1 : 0;
+        if (node.op === "!=") return a !== b ? 1 : 0;
+        throw new Error(node.op);
+      }
+      case "call": {
+        const fn = Object.hasOwn(HELPERS, node.name) ? HELPERS[node.name] : undefined;
+        if (!fn) throw new Error("Unknown " + node.name);
+        return fn(...node.args.map((a) => evalNode(a, vars)));
+      }
     }
-    const value = evalNode(parse(tokenize(formula.trim())), vars);
-    if (!Number.isFinite(value)) return { ok: false, error: "Not finite" };
-    return { ok: true, value };
-  } catch (e) {
-    return { ok: false, error: e.message || "Error" };
   }
-}
+
+  function evaluate(formula, values) {
+    try {
+      const vars = Object.create(null);
+      for (const [k, v] of Object.entries(values)) {
+        vars[k] = typeof v === "boolean" ? (v ? 1 : 0) : typeof v === "string" && (!v.trim() || !Number.isFinite(Number(v))) ? v : Number(v) || 0;
+      }
+      const value = evalNode(parse(tokenize(formula.trim())), vars);
+      if (typeof value !== "string" && !Number.isFinite(value)) return { ok: false, error: "Not finite" };
+      return { ok: true, value };
+    } catch (e) {
+      return { ok: false, error: e.message || "Error" };
+    }
+  }
+  return evaluate;
+})();
 
 function format(value, format, prefix = "", suffix = "") {
+  if (typeof value === "string") return prefix + value + suffix;
   if (format === "currency") {
     return prefix + value.toLocaleString("en-GB", { style: "currency", currency: "GBP", maximumFractionDigits: 2 }) + suffix;
   }
